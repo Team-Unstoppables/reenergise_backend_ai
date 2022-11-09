@@ -7,7 +7,7 @@ import cloudinary.uploader
 # config cloudinary
 cloudinary.config(
     cloud_name = "uia22",
-    api_key = os.environ.get('CLOUDINARY_API'),
+    api_key = os.environ.get('CLOUDINARY_KEY'),
     api_secret = os.environ.get('CLOUDINARY_SECRET')
 )
 
