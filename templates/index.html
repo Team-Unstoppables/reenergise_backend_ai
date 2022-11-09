@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReEnergise Segmentation</title>
+</head>
+
+<body>
+    <h1>The following API calls are available from this back-end.</h1>
+    <ol>
+        <li><b>Segment Satellite Image:</b> <a href="/segment/">/segment/URL</a> Replace URL with the image URL you want
+            to run segmentation on. Returns URL of the Segmented image.</li>
+        <li><b>Get Results:</b> <a href="/results">/results/INDEX</a> Replace index with the index of the chosen roof-top.
+            Returns JSON comprising results based on the area of chosen roof. </li>
+        <li><b>Others: </b> To be added based on the project requirements. </li>
+    </ol>
+    <footer>
+        <p>© 2022 Team Unstoppables</p>
+    </footer>
+</body>
+    <style>
+        footer {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            background-color: #f1f1f1;
+            color: black;
+            text-align: center;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+
+</html>
