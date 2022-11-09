@@ -22,6 +22,6 @@ def model_configs():
         'DATA_PATH': r'./generate_dep_info',
         'PRIOR_MEAN': [0.4050815770832258, 0.4270536020305017, 0.39289652127756025],
         'PRIOR_STD': [0.02652672988917037, 0.024909359403410613, 0.025808072934281168],
-        'load_checkpoint_path': r'.\checkpoint\INRIA_ckpt_latest.pt',
+        'load_checkpoint_path': r'./checkpoint/INRIA_ckpt_latest.pt',
     }
     return model_infos
