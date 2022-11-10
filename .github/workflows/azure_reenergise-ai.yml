@@ -7,7 +7,7 @@ name: Build and deploy Python app to Azure Web App - reenergise-ai
 on:
   push:
     branches:
-      - azure
+      - master
   workflow_dispatch:
 
 jobs:
@@ -46,6 +46,13 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      # declare new environment variable
+      env:
+        # set the variable to the value of the output
+        # from the deploy-to-webapp step
+        CLOUDINARY_KEY: ${{ secrets.CLOUDINARY_KEY }}
+        CLOUDINARY_SECRET: ${{ secrets.CLOUDINARY_SECRET }}
+        MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
 
     steps:
       - name: Download artifact from build job
