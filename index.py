@@ -18,7 +18,7 @@ def index():
 
 def get_satellite_image(lat, lon, zoom=18, size="1000x1000", maptype="satellite",
                         format="png", scale = 1,
-                        key=os.environ.get('MAPS_API_KEY')):
+                        key=os.environ.get("MAPS_API_KEY")):
 
     url = "https://maps.googleapis.com/maps/api/staticmap?"
     url += "center=" + str(lat) + "," + str(lon)

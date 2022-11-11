@@ -1,5 +1,6 @@
 # get satellite image of a location using google maps api
 import skimage.io as io
+import os
 from urllib.request import urlopen
 import cv2
 import numpy as np
@@ -7,7 +8,7 @@ import matplotlib.pyplot as plt
 
 def get_satellite_image(lat, lon, zoom=18, size="1000x1000", maptype="satellite",
                         format="png", scale = 1,
-                        key="AIzaSyDYYY1xWo9eYMgRmaTDi43Ft5SNY7dDcF0"):
+                        key=os.environ.get("MAPS_API_KEY")):
 
     url = "https://maps.googleapis.com/maps/api/staticmap?"
     url += "center=" + str(lat) + "," + str(lon)

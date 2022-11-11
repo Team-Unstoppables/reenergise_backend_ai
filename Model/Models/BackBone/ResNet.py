@@ -219,16 +219,19 @@ def _resnet(arch, block, layers, pretrained, progress, num_classes=1000, in_chan
         state_dict = load_state_dict_from_url(model_urls[arch],
                                               progress=progress)
         if in_channels != 3:
+            print('Removing the first conv layer')
             keys = state_dict.keys()
             keys = [x for x in keys if 'conv1.weight' in x]
             for key in keys:
                 del state_dict[key]
         if num_classes !=1000:
+            print('Removing the last fc layer')
             keys = state_dict.keys()
             keys = [x for x in keys if 'fc' in x]
             for key in keys:
                 del state_dict[key]
         if 'block5' not in out_keys:
+            print('Removing the last layer')
             keys = state_dict.keys()
             keys = [x for x in keys if 'layer4' in x]
             for key in keys:

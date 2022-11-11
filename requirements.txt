@@ -2,7 +2,6 @@ cloudinary
 einops
 Flask
 Flask_Cors
-gevent
 matplotlib
 numpy
 opencv_python_headless
