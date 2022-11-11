@@ -31,9 +31,34 @@ def get_satellite_image(lat, lon, zoom=18, size="1000x1000", maptype="satellite"
 
     return url
 
+def get_image(place, zoom=18, size="1000x1000", maptype="satellite",
+                        format="png", scale = 1,
+                        key=os.environ.get("MAPS_API_KEY")):
+    url = "https://maps.googleapis.com/maps/api/staticmap?"
+    # replace %20 with + in place name
+    place = place.replace("%20", "+")
+    place = place.replace(" ", "+")
+    url += "center=" + place
+    url += "&zoom=" + str(zoom)
+    url += "&size=" + size
+    url += "&maptype=" + maptype
+    url += "&key=" + key
+    url += "&format=" + format
+    print(url)
+    return url
+
 @app.route("/segment/<float(signed=True):lat>/<float(signed=True):lon>", methods=['GET'])
 def segment(lat, lon):
     img_url = get_satellite_image(lat, lon)
+    seg_obj = infer.Segmentation(img_url, vis=True)
+    global area 
+    area = seg_obj.area
+    segmented_url = seg_obj.segmented_url
+    return jsonify({'segmented_url': segmented_url})
+
+@app.route("/segment/<place>", methods=['GET'])
+def segment_place(place):
+    img_url = get_image(place)
     seg_obj = infer.Segmentation(img_url, vis=True)
     global area 
     area = seg_obj.area
