@@ -28,10 +28,10 @@ class PostProcessing:
         img = cv2.resize(img, (512, 512))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         #draw contours without filling
+        self.contours = [contour for contour in contours if cv2.contourArea(contour) > 100]
         cv2.drawContours(img, contours, -1, (255, 0 , 0), 1)
-        contours = [contour for contour in contours if cv2.contourArea(contour) > 100]
-        for i in range(len(contours)):
-            x, y, w, h = cv2.boundingRect(contours[i])
+        for i in range(len(self.contours)):
+            x, y, w, h = cv2.boundingRect(self.contours[i])
             cv2.putText(img, str(i+1), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         # upscale the image to 1000 x 1000
@@ -44,10 +44,7 @@ class PostProcessing:
     def GetArea(self):
         contours = self.contours
         stats = self.stats
-        areas = stats[1:, cv2.CC_STAT_AREA]
-        for i in range(1, self.num_labels):
-            if stats[i, cv2.CC_STAT_AREA] < 100:
-                contours[self.labels == i] = 0
-        #areas = np.sort(areas)
-        return areas
+        areas = [cv2.contourArea(contour) for contour in contours]
+        print(areas)
+        return areas 
     
