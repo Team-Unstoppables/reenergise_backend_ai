@@ -32,7 +32,10 @@ class PostProcessing:
         cv2.drawContours(img, contours, -1, (255, 0 , 0), 1)
         for i in range(len(self.contours)):
             x, y, w, h = cv2.boundingRect(self.contours[i])
-            cv2.putText(img, str(i+1), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+            cv2.circle(img, (x, y), 10, (0, 0, 0), -1)
+            cv2.putText(img, str(i+1), (x-5, y+5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            # put a circle behind the number to make it more visible
+            
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         # upscale the image to 1000 x 1000
         img = cv2.resize(img, (1000, 1000))
