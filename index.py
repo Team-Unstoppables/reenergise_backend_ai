@@ -6,13 +6,10 @@ import os
 import math
 from flask_cors import CORS
 from Model import infer
+from savings import main
 
 app = Flask(__name__)
 CORS(app)
-
-area = []
-segmented_area = []
-
 
 @app.route('/')
 def index():
@@ -27,7 +24,6 @@ def scaling_factor(lat):
 def get_satellite_image(lat, lon, zoom=18, size="1000x1000", maptype="satellite",
                         format="png", scale = 2,
                         key=os.environ.get("MAPS_API_KEY")):
-
     url = "https://maps.googleapis.com/maps/api/staticmap?"
     url += "center=" + str(lat) + "," + str(lon)
     url += "&zoom=" + str(zoom)
@@ -57,6 +53,11 @@ def get_image(place, zoom=18, size="1000x1000", maptype="satellite",
 
 @app.route("/segment/<float(signed=True):lat>/<float(signed=True):lon>", methods=['GET'])
 def segment(lat, lon):
+    global latitude
+    global longitude
+    latitude = lat
+    longitude = lon
+    
     img_url = get_satellite_image(lat, lon)
     seg_obj = infer.Segmentation(img_url, vis=True)
     area = seg_obj.area
@@ -78,9 +79,15 @@ def segment_place(place):
     return jsonify({'segmented_url': segmented_url})
 
 
-@app.route('/results/<index>', methods=['GET'])
-def results(index):
-    return jsonify({'area': str(scaled_area[int(int(index)-1)])+" sq. m"})
+@app.route('/results/<lat>/<lon>/<index>/<ac_temp>/<ac_type>/<model>/<cost>', methods=['GET'])
+def results(lat, lon, index, ac_temp, ac_type, model, cost):
+    area = scaled_area[int(index)]
+    print("area", area)
+    savings_data = main(lat, lon, area, float(ac_temp), float(cost), ac_type, model)
+    # convert saving_data to dictionary
+
+    return jsonify(savings_data)
+    
 
 
 if __name__ == '__main__':
