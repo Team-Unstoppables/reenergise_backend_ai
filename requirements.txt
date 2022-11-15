@@ -8,6 +8,7 @@ opencv_python_headless
 pandas
 PyYAML
 scikit_image
+requests
 seaborn
 torch
 tqdm
