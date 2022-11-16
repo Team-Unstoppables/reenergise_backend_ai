@@ -65,7 +65,7 @@ def segment(lat, lon):
     global scaled_area
     scaled_area = [scaling_factor(lat)*a for a in area]
     segmented_url = seg_obj.segmented_url
-    return jsonify({'segmented_url': segmented_url})
+    return jsonify({'segmented_url': segmented_url, 'roof_number': str(len(scaled_area))})
 
 @app.route("/segment/<place>", methods=['GET'])
 def segment_place(place):
@@ -76,7 +76,7 @@ def segment_place(place):
     global scaled_area
     scaled_area = [7*a for a in seg_obj.area]
     segmented_url = seg_obj.segmented_url
-    return jsonify({'segmented_url': segmented_url})
+    return jsonify({'segmented_url': segmented_url, 'roof_number': str(len(scaled_area))})
 
 
 @app.route('/results/<lat>/<lon>/<index>/<ac_temp>/<ac_type>/<model>/<cost>', methods=['GET'])
