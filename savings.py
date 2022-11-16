@@ -3,8 +3,7 @@ import numpy as np
 import requests
 import datetime
 
-
-SR = {'white': 1, 'black': 0, 'red': 0.8, 'green': 0.6, 'blue': 0.4, 'yellow': 0.7, 'orange': 0.9, 'purple': 0.5}
+SR = {'white': 0.71, 'black': 0.05, 'red': 0.40, 'grey': 0.38, 'green': 0.17, 'brown': 0.11}
 epsilon = {'concrete': 0.5, 'glass': 0.9, 'aluminum': 0.8, 'wood': 0.6, 'plastic': 0.7}
 
 def WeatherData(lat, lon):
