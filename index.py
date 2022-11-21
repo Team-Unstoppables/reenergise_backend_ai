@@ -2,6 +2,8 @@ import sys
 import os
 sys.path.extend(['Model'])
 from flask import Flask, render_template, jsonify
+import cv2
+import numpy as np
 import os
 import math
 from flask_cors import CORS
@@ -87,6 +89,14 @@ def results(lat, lon, index, ac_temp, ac_type, model, cost):
     # convert saving_data to dictionary
 
     return jsonify(savings_data)
+
+@app.route('canvas/<x1>/<y1>/<x2>/<y2>/<x3>/<y3>/<x4>/<y4>/<lat>/<lon>', methods=['GET'])
+def canvas_area(x1, y1, x2, y2, x3, y3, x4, y4, lat, lon):
+    # get area from 4 points
+    scaling_factor = scaling_factor(lat)
+    global scaled_area
+    scaled_area = [cv2.contourArea(np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]]))*scaling_factor]
+    return jsonify({'area': str(scaled_area[0])})
     
 
 
