@@ -90,7 +90,7 @@ def results(lat, lon, index, ac_temp, ac_type, model, cost):
 
     return jsonify(savings_data)
 
-@app.route('canvas/<x1>/<y1>/<x2>/<y2>/<x3>/<y3>/<x4>/<y4>/<lat>/<lon>', methods=['GET'])
+@app.route('/canvas/<x1>/<y1>/<x2>/<y2>/<x3>/<y3>/<x4>/<y4>/<lat>/<lon>', methods=['GET'])
 def canvas_area(x1, y1, x2, y2, x3, y3, x4, y4, lat, lon):
     # get area from 4 points
     scaling_factor = scaling_factor(lat)
