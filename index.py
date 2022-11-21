@@ -92,10 +92,13 @@ def results(lat, lon, index, ac_temp, ac_type, model, cost):
 
 @app.route('/canvas/<x1>/<y1>/<x2>/<y2>/<x3>/<y3>/<x4>/<y4>/<lat>/<lon>', methods=['GET'])
 def canvas_area(x1, y1, x2, y2, x3, y3, x4, y4, lat, lon):
+    x1, y1, x2, y2, x3, y3, x4, y4 = int(x1), int(y1), int(x2), int(y2), int(x3), int(y3), int(x4), int(y4)
+    lat = float(lat)
+    lon = float(lon)
     # get area from 4 points
-    scaling_factor = scaling_factor(lat)
     global scaled_area
-    scaled_area = [cv2.contourArea(np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]]))*scaling_factor]
+    scale = scaling_factor(lat)
+    scaled_area = [cv2.contourArea(np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]]))*scale]
     return jsonify({'area': str(scaled_area[0])})
     
 
