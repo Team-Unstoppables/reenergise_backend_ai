@@ -21,7 +21,7 @@ def index():
 def scaling_factor(lat):
     zoom = 18
     scale = 156543.03 * math.cos((22/7) / 180 * lat) / (2 ** zoom)
-    return scale
+    return scale*scale
 
 def get_satellite_image(lat, lon, zoom=18, size="1000x1000", maptype="satellite",
                         format="png", scale = 2,
@@ -76,18 +76,18 @@ def segment_place(place):
     area = seg_obj.area
     # make scaled area global
     global scaled_area
-    scaled_area = [7*a for a in seg_obj.area]
+    scaled_area = [49*a for a in seg_obj.area]
     segmented_url = seg_obj.segmented_url
     return jsonify({'segmented_url': segmented_url, 'roof_number': str(len(scaled_area))})
 
 
 @app.route('/results/<lat>/<lon>/<index>/<ac_temp>/<ac_type>/<model>/<cost>', methods=['GET'])
 def results(lat, lon, index, ac_temp, ac_type, model, cost):
+    print(scaled_area)
     area = scaled_area[int(index)]
     print("area", area)
     savings_data = main(lat, lon, area, float(ac_temp), float(cost), ac_type, model)
     # convert saving_data to dictionary
-
     return jsonify(savings_data)
 
 @app.route('/canvas/<x1>/<y1>/<x2>/<y2>/<x3>/<y3>/<x4>/<y4>/<lat>/<lon>', methods=['GET'])
@@ -101,7 +101,6 @@ def canvas_area(x1, y1, x2, y2, x3, y3, x4, y4, lat, lon):
     scaled_area = [cv2.contourArea(np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]]))*scale]
     return jsonify({'area': str(scaled_area[0])})
     
-
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
