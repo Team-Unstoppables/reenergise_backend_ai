@@ -87,6 +87,7 @@ def results(lat, lon, index, ac_temp, ac_type, model, cost):
     area = scaled_area[int(index)]
     print("area", area)
     savings_data = main(lat, lon, area, float(ac_temp), float(cost), ac_type, model)
+    savings_data['area'] = area
     # convert saving_data to dictionary
     return jsonify(savings_data)
 

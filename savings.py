@@ -100,8 +100,8 @@ def main(lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
     data['savings'] = savings
     data['room_temp'] = T_room
     data['roof_temp'] = T_surf
-    data['energy'] = energy
-    data['cost'] = cost_color
+    data['energy'] = energy #kwh
+    data['cost'] = cost_color #currency
     return data
 
     
