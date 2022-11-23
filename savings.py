@@ -13,6 +13,7 @@ def WeatherData(lat, lon):
     url = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lon + "&appid=" + api_id
     response = requests.get(url)
     data = response.json()
+    print(data['main']['temp'] - 273.15, data['main']['feels_like'] - 273.15)
     return data['main']['temp'], data['main']['feels_like'] # feels like, room temp and other is air temp
 
 def SolarIrradiance(lat, lon, area):
@@ -62,37 +63,48 @@ def main(lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
     T_air, T_room_ideal = WeatherData(lat, lon)
     # get solar irradiance
     I, I_month = SolarIrradiance(lat, lon, area)
-    # get roof temperature for white roof and black roof
-    T_surf_white = RoofTemperature(SR['white'], I, T_air, 10)
-    T_surf_black = RoofTemperature(SR['black'], I, T_air, 10)
-    # get room temperature for white roof and black roof
-    T_room_white = RoomTemperature(T_surf_white, T_room_ideal)
-    T_room_black = RoomTemperature(T_surf_black, T_room_ideal)
+    # get for all colors in SR
+    T_surf = {}
+    for color in SR:
+        T_surf[color] = RoofTemperature(SR[color], I, T_air, 5)
+    # get for all materials in epsilon  for all T_surf
+    T_room = {}
+    for color in T_surf:
+        T_room[color] = RoomTemperature(T_surf[color], T_room_ideal)
+    
+    # energy consumption for all colors
+    energy = {}
+    for color in T_room:
+        energy[color] = ac_energy(T_room[color], ac_temp, area)
+    
+    energy_color = {}
+    for color in energy:
+        energy_color[color] = energy[color] / (float(AC_Cooling_Chart[ac_type]['model'][model]) / 1000)
 
-    # get energy consumption for white roof and black roof
-    energy_white = ac_energy(T_room_white, ac_temp, area)
-    energy_black = ac_energy(T_room_black, ac_temp, area)
-    # convert to units
-    print(ac_type, model)
-    energy_white = energy_white / (float(AC_Cooling_Chart[ac_type]['model'][model]) / 1000)
-    energy_black = energy_black / (float(AC_Cooling_Chart[ac_type]['model'][model]) / 1000)
-
-    cost_white = energy_white * cost
-    cost_black = energy_black * cost
-    # get savings
-    savings = energy_black- energy_white
-    savings = savings * (float(AC_Cooling_Chart[ac_type]['model'][model]) / 1000)
-    savings = savings * cost
-
-    saving_dict = {'Cost Saving': savings, 'cost_white': cost_white, 'cost_black': cost_black, 'energy_white': energy_white, 'energy_black': energy_black, 'T_surf_white': T_surf_white, 'T_surf_black': T_surf_black, 'T_room_white': T_room_white, 'T_room_black': T_room_black}
-    return saving_dict
+    # cost for each color
+    cost_color = {}
+    for color in energy_color:
+        cost_color[color] = energy_color[color] * cost
+    
+    # savings corresponding to all colors mapping cost based on each color to one another
+    savings = {}
+    for color in cost_color:
+        savings[color] = {}
+        for color2 in cost_color:
+            savings[color][color2] = cost_color[color] - cost_color[color2]
+            savings[color][color2] = savings[color][color2] * (float(AC_Cooling_Chart[ac_type]['model'][model]) / 1000)
+            # multiply with cost
+            savings[color][color2] = savings[color][color2] * cost
+    # save savings, room temp, roof temp, energy consumption, cost for each color in a dictionary
+    data = {}
+    data['savings'] = savings
+    data['room_temp'] = T_room
+    data['roof_temp'] = T_surf
+    data['energy'] = energy
+    data['cost'] = cost_color
+    return data
 
     
-    
-
-
-
-
 if __name__ == "__main__":
     lat = -37.7749
     lon = 122.4194
@@ -101,4 +113,5 @@ if __name__ == "__main__":
     ac_type = 'split'
     model = '1.5'
     cost = 0.15
-    print(main(lat, lon, area, ac_temp, cost, ac_type, model))
+    data = main(lat, lon, area, ac_temp, cost, ac_type, model)
+    print(data)
