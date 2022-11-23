@@ -73,8 +73,6 @@ def segment(lat, lon):
 def segment_place(place):
     img_url = get_image(place)
     seg_obj = infer.Segmentation(img_url, vis=True)
-    area = seg_obj.area
-    # make scaled area global
     global scaled_area
     scaled_area = [49*a for a in seg_obj.area]
     segmented_url = seg_obj.segmented_url
@@ -88,7 +86,6 @@ def results(lat, lon, index, ac_temp, ac_type, model, cost):
     print("area", area)
     savings_data = main(lat, lon, area, float(ac_temp), float(cost), ac_type, model)
     savings_data['area'] = area
-    # convert saving_data to dictionary
     return jsonify(savings_data)
 
 @app.route('/canvas/<x1>/<y1>/<x2>/<y2>/<x3>/<y3>/<x4>/<y4>/<lat>/<lon>', methods=['GET'])
@@ -96,13 +93,11 @@ def canvas_area(x1, y1, x2, y2, x3, y3, x4, y4, lat, lon):
     x1, y1, x2, y2, x3, y3, x4, y4 = int(x1), int(y1), int(x2), int(y2), int(x3), int(y3), int(x4), int(y4)
     lat = float(lat)
     lon = float(lon)
-    # get area from 4 points
     global scaled_area
     scale = scaling_factor(lat)
     scaled_area = [cv2.contourArea(np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]]))*scale]
     return jsonify({'area': str(scaled_area[0])})
     
-
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
