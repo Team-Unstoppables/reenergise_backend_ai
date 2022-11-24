@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import os
 import math
+import requests
 from flask_cors import CORS
 from Model import infer
 from savings import main
@@ -23,8 +24,8 @@ def scaling_factor(lat):
     scale = 156543.03 * math.cos((22/7) / 180 * lat) / (2 ** zoom)
     return scale*scale
 
-def get_satellite_image(lat, lon, zoom=18, size="1000x1000", maptype="satellite",
-                        format="png", scale = 2,
+def get_satellite_image(lat, lon, zoom=18, size="800x400", maptype="satellite",
+                        format="png", scale = 4,
                         key=os.environ.get("MAPS_API_KEY")):
     url = "https://maps.googleapis.com/maps/api/staticmap?"
     url += "center=" + str(lat) + "," + str(lon)
@@ -63,7 +64,6 @@ def segment(lat, lon):
     img_url = get_satellite_image(lat, lon)
     seg_obj = infer.Segmentation(img_url, vis=True)
     area = seg_obj.area
-    # make scaled area global
     global scaled_area
     scaled_area = [scaling_factor(lat)*a for a in area]
     segmented_url = seg_obj.segmented_url
@@ -71,12 +71,10 @@ def segment(lat, lon):
 
 @app.route("/segment/<place>", methods=['GET'])
 def segment_place(place):
-    img_url = get_image(place)
-    seg_obj = infer.Segmentation(img_url, vis=True)
-    global scaled_area
-    scaled_area = [49*a for a in seg_obj.area]
-    segmented_url = seg_obj.segmented_url
-    return jsonify({'segmented_url': segmented_url, 'roof_number': str(len(scaled_area))})
+    data = requests.get("https://api.opencagedata.com/geocode/v1/json?key=1cdb447dbbe543baa73a53e40e6e26d0&q="+place+"&pretty=1")
+    lat = data.json()['results'][0]['geometry']['lat']
+    lon = data.json()['results'][0]['geometry']['lng']
+    return segment(lat, lon)   
 
 
 @app.route('/results/<lat>/<lon>/<index>/<ac_temp>/<ac_type>/<model>/<cost>', methods=['GET'])
@@ -84,8 +82,15 @@ def results(lat, lon, index, ac_temp, ac_type, model, cost):
     print(scaled_area)
     area = scaled_area[int(index)]
     print("area", area)
-    savings_data = main(lat, lon, area, float(ac_temp), float(cost), ac_type, model)
+    print("lat", lat)
+    print("lon", lon)
+    place_res = requests.get("https://api.opencagedata.com/geocode/v1/json?q=" + str(lat) + "+" + str(lon) + "&key=1cdb447dbbe543baa73a53e40e6e26d0")
+    place_dict = place_res.json()
+    place = place_dict['results'][0]['components']['state']
+    currency = place_dict['results'][0]['annotations']['currency']['iso_code']
+    savings_data = main(lat, lon, area, float(ac_temp), float(cost), place, ac_type, model)
     savings_data['area'] = area
+    savings_data['currency'] = currency
     return jsonify(savings_data)
 
 @app.route('/canvas/<x1>/<y1>/<x2>/<y2>/<x3>/<y3>/<x4>/<y4>/<lat>/<lon>', methods=['GET'])

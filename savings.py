@@ -13,14 +13,15 @@ def WeatherDailyData(lat, lon):
     lon = str(lon)
     api_id = os.environ.get('WEATHER')
     url = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lon + "&appid=" + api_id
+    print(url)
     response = requests.get(url)
     data = response.json()
     #print(data['main']['temp'] - 273.15, data['main']['feels_like'] - 273.15)
+    print(data)
     return data['main']['temp'], data['main']['feels_like'] # feels like, room temp and other is air temp
 
 def MonthlyWeather(place, mon):
     # https://api.worldweatheronline.com/premium/v1/weather.ashx?key=c3debe0db4e84063adf184530222311&q=London&fx=no&cc=no&mca=yes&format=json
-    api_id = "c3debe0db4e84063adf184530222311"
     url = "https://api.worldweatheronline.com/premium/v1/weather.ashx?key=c3debe0db4e84063adf184530222311&q="+place+"&fx=no&cc=no&mca=yes&format=json"
     #print(url)
     response = requests.get(url)
@@ -56,7 +57,7 @@ def SolarIrradiance(lat, lon, area):
         return 4.05 * area, 6.53 * area
     
 def RoofTemperature(SR, I, T_air, h_conv):
-    T_surf = ((1-SR) *I + h_conv*T_air )/h_conv
+    T_surf = ((1-SR) *(I/365) + h_conv*T_air )/h_conv
     T_surf = T_surf - 273.15
     return T_surf
 
@@ -81,7 +82,7 @@ AC_Cooling_Chart = {'split': {'model': {'1': '984', '1.5': '1490', '2': '1732'}}
                     , 'window': {'model': {'1': '1250', '2': '1745'}}} # all values in Watts/hr = Joules/sec
 
 
-def main(place, lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
+def main(lat, lon, area, ac_temp, cost, place, ac_type='split', model='1.5'):
     # get weather data
     T_air, T_room_ideal = WeatherDailyData(lat, lon)
     # get solar irradiance
@@ -116,14 +117,15 @@ def main(place, lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
         savings[color] = {}
         for color2 in cost_color:
             savings[color][color2] = cost_color[color] - cost_color[color2]
-            savings[color][color2] = savings[color][color2] * (float(AC_Cooling_Chart[ac_type]['model'][model]) / 1000)
+            savings[color][color2] = savings[color][color2] * (float(AC_Cooling_Chart[ac_type]['model'][model])/1000)
             # multiply with cost
-            savings[color][color2] = savings[color][color2] * cost
+            savings[color][color2] = savings[color][color2] * cost * 10
     # get current month number
     month = datetime.datetime.now().month
     T_air_month = float(MonthlyWeather(place, month))
     T_room_ideal_month = T_air_month - 5   
     I_month, I_month_month = SolarIrradiance(lat, lon, area)
+    print(I_month, I_month_month)
     T_surf_month = {}
     for color in SR:
         T_surf_month[color] = RoofTemperature(SR[color], I_month, T_air_month, 5)
@@ -146,7 +148,7 @@ def main(place, lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
             savings_month[color][color2] = cost_color_month[color] - cost_color_month[color2]
             savings_month[color][color2] = savings_month[color][color2] * (float(AC_Cooling_Chart[ac_type]['model'][model]) / 1000)
             # multiply with cost
-            savings_month[color][color2] = savings_month[color][color2] * cost * 10 * 30
+            savings_month[color][color2] = savings_month[color][color2] * cost * 10 * 30 
     
     T_air_year = float(AnnualData(place))
     T_room_ideal_year = T_air_year - 5
@@ -173,7 +175,7 @@ def main(place, lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
             savings_year[color][color2] = cost_color_year[color] - cost_color_year[color2]
             savings_year[color][color2] = savings_year[color][color2] * (float(AC_Cooling_Chart[ac_type]['model'][model]) / 1000)
             # multiply with cost
-            savings_year[color][color2] = savings_year[color][color2] * cost * 10 * 30 * 12
+            savings_year[color][color2] = savings_year[color][color2] * cost * 10 * 30 * 12 
     
      # save savings, room temp, roof temp, energy consumption, cost for each color in a dictionary
     data = {}
@@ -189,20 +191,19 @@ def main(place, lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
 
     
 if __name__ == "__main__":
-    lat = -27.42
-    lon = 153.05381
+    lat = -27.421
+    lon = 153.053
     area = 100
-    ac_temp = 5
+    ac_temp = 16
     ac_type = 'split'
     model = '1.5'
     cost = 0.15
     #print(AC_Cooling_Chart['split']['model']['1.5'])
-    place = requests.get("https://api.opencagedata.com/geocode/v1/json?q=" + str(lat) + "+" + str(lon) + "&key=1cdb447dbbe543baa73a53e40e6e26d0")
-    place_dict = place.json()
+    place_res = requests.get("https://api.opencagedata.com/geocode/v1/json?q=" + str(lat) + "+" + str(lon) + "&key=1cdb447dbbe543baa73a53e40e6e26d0")
+    place_dict = place_res.json()
     place = place_dict['results'][0]['components']['state']
     currency = place_dict['results'][0]['annotations']['currency']['iso_code']
-    #print(currency)
-    data = main(place, str(lat), str(lon), area, ac_temp, cost, ac_type, model)
+    data = main(str(lat), str(lon), area, ac_temp, cost, ac_type, model, place)
     data['currency'] = currency
     print(data)
     
