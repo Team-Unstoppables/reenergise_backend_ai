@@ -3,6 +3,8 @@ import numpy as np
 import requests
 import datetime
 
+AC_Cooling_Chart = {'split': {'model': {'1': '984', '1.5': '1490', '2': '1732'}}
+                    , 'window': {'model': {'1': '1250','1.5': '1500' ,'2': '1745'}}} # all values in Watts/hr = Joules/sec
 SR = {'white': 0.71, 'black': 0.05, 'red': 0.40, 'grey': 0.38, 'green': 0.17, 'brown': 0.11}
 epsilon = {'concrete': 0.5, 'glass': 0.9, 'aluminum': 0.8, 'wood': 0.6, 'plastic': 0.7}
 
@@ -16,13 +18,7 @@ def WeatherDailyData(lat, lon):
     #print(data['main']['temp'] - 273.15, data['main']['feels_like'] - 273.15)
     return data['main']['temp'], data['main']['feels_like'] # feels like, room temp and other is air temp
 
-def MonthlyWeather(lat, lon, mon):
-    lat = str(lat)
-    lon = str(lon)
-    place = requests.get("https://api.opencagedata.com/geocode/v1/json?q=" + lat + "+" + lon + "&key=1cdb447dbbe543baa73a53e40e6e26d0")
-    place = place.json()
-    print(place)
-    place = place['results'][0]['components']['state']
+def MonthlyWeather(place, mon):
     # https://api.worldweatheronline.com/premium/v1/weather.ashx?key=c3debe0db4e84063adf184530222311&q=London&fx=no&cc=no&mca=yes&format=json
     api_id = "c3debe0db4e84063adf184530222311"
     url = "https://api.worldweatheronline.com/premium/v1/weather.ashx?key=c3debe0db4e84063adf184530222311&q="+place+"&fx=no&cc=no&mca=yes&format=json"
@@ -33,10 +29,10 @@ def MonthlyWeather(lat, lon, mon):
     temp = data["data"]["ClimateAverages"][0]['month'][mon-1]['absMaxTemp']
     return temp
 
-def AnnualData(lat, lon):
+def AnnualData(place):
     temp_list = []
     for i in range(1, 13):
-        temp = MonthlyWeather(lat, lon, i)
+        temp = MonthlyWeather(place, i)
         temp_list.append(temp)
     sumVar = 0
     for i in temp_list:
@@ -85,7 +81,7 @@ AC_Cooling_Chart = {'split': {'model': {'1': '984', '1.5': '1490', '2': '1732'}}
                     , 'window': {'model': {'1': '1250', '2': '1745'}}} # all values in Watts/hr = Joules/sec
 
 
-def main(lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
+def main(place, lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
     # get weather data
     T_air, T_room_ideal = WeatherDailyData(lat, lon)
     # get solar irradiance
@@ -106,7 +102,8 @@ def main(lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
     
     energy_color = {}
     for color in energy:
-        energy_color[color] = energy[color] / (float(AC_Cooling_Chart[ac_type]['model'][model]) / 1000)
+        #print(ac_type, model)
+        energy_color[color] = energy[color] / (float(AC_Cooling_Chart[ac_type]['model'][(model)]) / 1000)
 
     # cost for each color
     cost_color = {}
@@ -124,7 +121,7 @@ def main(lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
             savings[color][color2] = savings[color][color2] * cost
     # get current month number
     month = datetime.datetime.now().month
-    T_air_month = float(MonthlyWeather(lat, lon, month))
+    T_air_month = float(MonthlyWeather(place, month))
     T_room_ideal_month = T_air_month - 5   
     I_month, I_month_month = SolarIrradiance(lat, lon, area)
     T_surf_month = {}
@@ -151,7 +148,7 @@ def main(lat, lon, area, ac_temp, cost, ac_type='split', model='1.5'):
             # multiply with cost
             savings_month[color][color2] = savings_month[color][color2] * cost * 10 * 30
     
-    T_air_year = float(AnnualData(lat, lon))
+    T_air_year = float(AnnualData(place))
     T_room_ideal_year = T_air_year - 5
     I_year, I_month_year = SolarIrradiance(lat, lon, area)
     T_surf_year = {}
@@ -199,4 +196,13 @@ if __name__ == "__main__":
     ac_type = 'split'
     model = '1.5'
     cost = 0.15
-    data = main(lat, lon, area, ac_temp, cost, ac_type, model)
+    #print(AC_Cooling_Chart['split']['model']['1.5'])
+    place = requests.get("https://api.opencagedata.com/geocode/v1/json?q=" + str(lat) + "+" + str(lon) + "&key=1cdb447dbbe543baa73a53e40e6e26d0")
+    place_dict = place.json()
+    place = place_dict['results'][0]['components']['state']
+    currency = place_dict['results'][0]['annotations']['currency']['iso_code']
+    #print(currency)
+    data = main(place, str(lat), str(lon), area, ac_temp, cost, ac_type, model)
+    data['currency'] = currency
+    print(data)
+    
